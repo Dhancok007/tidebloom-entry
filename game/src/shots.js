@@ -3,12 +3,12 @@
 // drifting seed toward its nearest bloom pool, the way a player does — so the frame is what
 // a short game really looks like, and the same seed always gives the same frame. The bloom
 // scene plays the first tide to its quota and stops on the blessing choice; the end scene
-// never paints at all, so the moon sets over an almost-empty garden, as it does for a
-// player who only watches.
+// plays the whole run through all twelve tides and stops on the Great Bloom victory, the
+// account a finished game shows.
 
 import { STEP, TIDES } from './config.js';
 import { EVENT_CLEARED, EVENT_OVER } from './garden.js';
-import { SCREEN_BLESSING, SCREEN_OVER, SCREEN_PLAY, SCREEN_TITLE } from './ui.js';
+import { SCREEN_BLESSING, SCREEN_PLAY, SCREEN_TITLE, SCREEN_WIN } from './ui.js';
 
 const TITLE_SECONDS = 7;
 const PLAY_SECONDS = 34;
@@ -61,10 +61,14 @@ export function stageShot(name, garden, flow, mods) {
     return { screen: SCREEN_BLESSING, best: 0, options: [0, 1, 3] };
   }
   if (name === 'end') {
-    garden.reset(4, mods);
-    playForward(garden, flow, mods, END_LIMIT_SECONDS, false);
-    garden.state.totalLost = garden.state.lost + 6;
-    return { screen: SCREEN_OVER, best: garden.state.score, options: [0, 1, 2] };
+    let lost = 0;
+    for (let t = 0; t < TIDES.length; t += 1) {
+      garden.reset(t, mods);
+      playForward(garden, flow, mods, END_LIMIT_SECONDS, true);
+      lost += garden.state.lost;
+    }
+    garden.state.totalLost = lost;
+    return { screen: SCREEN_WIN, best: garden.state.score, options: [0, 1, 2] };
   }
   garden.reset(0, mods);
   playForward(garden, flow, mods, TITLE_SECONDS, false);
